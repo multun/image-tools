@@ -14,7 +14,8 @@ STORE_USERNAME ?=       $(shell whoami)
 STORE_PATH ?=           scw
 SHELL_BIN ?=            /bin/bash
 SHELL_DOCKER_OPTS ?=
-SOURCE_URL ?=           $(shell sh -c "git config --get remote.origin.url | sed 's_git@github.com:_https://github.com/_'" || echo https://github.com/scaleway/image-tools)
+REPOSITORY ?= scaleway/image-tools
+SOURCE_URL ?=           $(shell sh -c "git config --get remote.origin.url | sed 's_git@github.com:_https://github.com/_'" || echo https://github.com/${REPOSITORY})
 TITLE ?=                $(NAME)
 VERSION_ALIASES ?=
 BUILD_OPTS ?=
@@ -274,13 +275,13 @@ shell:  .docker-container-$(TARGET_UNAME_ARCH).built
 .PHONY: test
 test:  .docker-container-$(TARGET_UNAME_ARCH).built
 	test $(HOST_ARCH) = $(TARGET_UNAME_ARCH) || $(MAKE) setup_binfmt
-	docker run --rm -it -e SKIP_NON_DOCKER=1 $(DOCKER_NAMESPACE)$(NAME):$(TARGET_DOCKER_TAG_ARCH)-$(VERSION) $(SHELL_BIN) -c 'SCRIPT=$$(mktemp); curl -s https://raw.githubusercontent.com/scaleway/image-tools/master/builder/unit.bash > $$SCRIPT; bash $$SCRIPT'
+	docker run --rm -it -e SKIP_NON_DOCKER=1 $(DOCKER_NAMESPACE)$(NAME):$(TARGET_DOCKER_TAG_ARCH)-$(VERSION) $(SHELL_BIN) -c 'SCRIPT=$$(mktemp); curl -s https://raw.githubusercontent.com/${REPOSITORY}/master/builder/unit.bash > $$SCRIPT; bash $$SCRIPT'
 
 
 .PHONY: travis
 travis:
 	npm install dockerfile_lint
-	wget https://raw.githubusercontent.com/scaleway/image-tools/master/builder/dockerlint.rules
+	wget https://raw.githubusercontent.com/${REPOSITORY}/master/builder/dockerlint.rules
 	find . -name Dockerfile -print0 | xargs -L 1 -r -0 ./node_modules/.bin/dockerfile_lint -r dockerlint.rules -f
 
 .PHONY:
@@ -426,6 +427,6 @@ sync-image-tools:
 
 .PHONY: bump-image-tools
 bump-image-tools:
-	$(eval SHA := $(shell curl -s https://api.github.com/repos/scaleway/image-tools/branches/master | jq -r .commit.sha))
+	$(eval SHA := $(shell curl -s https://api.github.com/repos/${REPOSITORY}/branches/master | jq -r .commit.sha))
 	sed -i.bak 's/^\(IMAGE_TOOLS_CHECKOUT[[:space:]=]*\).*$$/\1$(SHA)/' Makefile
 	rm Makefile.bak

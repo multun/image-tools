@@ -6,6 +6,7 @@ FLAVORS=$(echo ${FLAVORS:-${@:-"common"}} | tr "," " ")
 ROOTDIR=${ROOTDIR:-/}
 DL=${DL:-$(hash curl 2>/dev/null && echo "curl" || echo "wget")}
 TMPFILE=/tmp/image-tools-temporary.tar
+REPOSITORY=${REPOSITORY:-scaleway/image-tools}
 
 
 # Download with curl or wget
@@ -39,8 +40,8 @@ clean() {
 
 main() {
     # Download tarball
-    dl https://github.com/scaleway/image-tools/archive/${BRANCH}.tar.gz > ${TMPFILE}
-    
+    dl https://github.com/${REPOSITORY}/archive/${BRANCH}.tar.gz > ${TMPFILE}
+
     # Apply flavors
     for flavor in ${FLAVORS}; do
         apply_flavor ${flavor}
